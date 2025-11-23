@@ -6,11 +6,12 @@ metadata:
   labels:
     app: fastapi-demo
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - port: 80
       targetPort: 8000
       protocol: TCP
       name: http
+      nodePort: 30080
   selector:
     app: fastapi-demo

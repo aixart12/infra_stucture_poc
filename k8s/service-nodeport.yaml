@@ -1,0 +1,21 @@
+# Alternative Service Configuration using NodePort
+# This allows direct access to the app without port-forward
+# To use this, rename this file to service.yaml or update kustomization.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-demo
+  namespace: fastapi-demo
+  labels:
+    app: fastapi-demo
+spec:
+  type: NodePort # Changed from ClusterIP to NodePort
+  ports:
+    - port: 80
+      targetPort: 8000
+      protocol: TCP
+      name: http
+      nodePort: 30080 # Optional: specify a port (30000-32767 range)
+  selector:
+    app: fastapi-demo
