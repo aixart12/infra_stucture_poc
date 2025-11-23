@@ -8,7 +8,6 @@ resources:
   - configmap.yaml
   - deployment.yaml
   - service.yaml
-  - service-monitor.yaml
 
 commonLabels:
   app: fastapi-demo

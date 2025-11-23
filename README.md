@@ -1,10 +1,9 @@
-# FastAPI GitOps POC with ArgoCD and Prometheus
+# FastAPI GitOps POC with ArgoCD
 
 This is a proof of concept demonstrating GitOps practices using:
 
 - **FastAPI** - Python web framework
 - **ArgoCD** - GitOps continuous delivery tool
-- **Prometheus** - Monitoring and metrics collection
 - **Grafana Loki** - Log aggregation system
 - **Kubernetes** - Container orchestration
 
@@ -25,10 +24,10 @@ This is a proof of concept demonstrating GitOps practices using:
        │
        │ Sync
        ▼
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│ Kubernetes  │────▶│  Prometheus  │────▶│   Grafana   │
-│  Cluster    │     │  (Metrics)   │     │ (Dashboard) │
-└──────┬──────┘     └──────────────┘     └─────────────┘
+┌─────────────┐
+│ Kubernetes  │
+│  Cluster    │
+└──────┬──────┘
        │
        │ Logs
        ▼
@@ -50,12 +49,9 @@ This is a proof of concept demonstrating GitOps practices using:
 │   ├── configmap.yaml       # Application configuration
 │   ├── deployment.yaml      # Application deployment
 │   ├── service.yaml         # Kubernetes service
-│   ├── service-monitor.yaml # Prometheus ServiceMonitor
 │   └── kustomization.yaml   # Kustomize configuration
 ├── argocd/
 │   └── application.yaml     # ArgoCD application definition
-├── monitoring/
-│   └── prometheus-config.yaml # Prometheus configuration
 ├── logging/
 │   ├── loki-config.yaml     # Loki configuration
 │   └── promtail-config.yaml # Promtail configuration
@@ -69,7 +65,6 @@ This is a proof of concept demonstrating GitOps practices using:
 - kubectl configured to access your cluster
 - Docker (for building images)
 - ArgoCD installed in your cluster
-- Prometheus Operator installed (for ServiceMonitor)
 - Grafana Loki and Promtail installed (for logging)
 
 ## Setup Instructions
@@ -113,16 +108,7 @@ Access ArgoCD UI at: https://localhost:8080
 - Username: `admin`
 - Password: (from the command above)
 
-### 3. Install Prometheus Operator
-
-```bash
-# Install Prometheus Operator using Helm
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
-```
-
-### 4. Install Grafana Loki
+### 3. Install Grafana Loki
 
 ```bash
 # Install Loki using Helm
@@ -131,7 +117,7 @@ helm repo update
 helm install loki grafana/loki-stack -n logging --create-namespace
 ```
 
-### 5. Configure ArgoCD Application
+### 4. Configure ArgoCD Application
 
 1. Update `argocd/application.yaml` with your Git repository URL:
 
@@ -158,7 +144,7 @@ helm install loki grafana/loki-stack -n logging --create-namespace
      --self-heal
    ```
 
-### 6. Verify Deployment
+### 5. Verify Deployment
 
 ```bash
 # Check ArgoCD application status
@@ -176,41 +162,9 @@ kubectl port-forward svc/fastapi-demo -n fastapi-demo 8000:80
 # Test endpoints
 curl http://localhost:8000/
 curl http://localhost:8000/health
-curl http://localhost:8000/metrics
 ```
 
-## Monitoring
-
-### Prometheus Metrics
-
-The FastAPI application exposes Prometheus metrics at `/metrics` endpoint. Prometheus will automatically scrape these metrics using the ServiceMonitor.
-
-Access Prometheus:
-
-```bash
-kubectl port-forward svc/prometheus-kube-prometheus-prometheus -n monitoring 9090:9090
-```
-
-Visit: http://localhost:9090
-
-### Grafana Dashboards
-
-Access Grafana:
-
-```bash
-kubectl port-forward svc/prometheus-grafana -n monitoring 3000:80
-```
-
-Default credentials:
-
-- Username: `admin`
-- Password: `prom-operator` (or check the secret)
-
-Add Prometheus as a data source:
-
-- URL: `http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090`
-
-### Logging with Loki
+## Logging with Loki
 
 Access Loki:
 
@@ -233,7 +187,7 @@ Query logs in Grafana using LogQL:
 1. **Make Changes**: Update code or Kubernetes manifests
 2. **Commit & Push**: Push changes to Git repository
 3. **ArgoCD Sync**: ArgoCD automatically detects changes and syncs to cluster
-4. **Monitor**: Check ArgoCD UI and Prometheus/Grafana for status
+4. **Monitor**: Check ArgoCD UI and Loki for logs
 
 ## Application Endpoints
 
@@ -242,7 +196,6 @@ Query logs in Grafana using LogQL:
 - `GET /ready` - Readiness check
 - `GET /api/items` - Sample API endpoint
 - `GET /api/status` - Application status
-- `GET /metrics` - Prometheus metrics
 
 ## Customization
 
@@ -276,20 +229,9 @@ kubectl get application fastapi-demo -n argocd -o yaml
 kubectl logs -n fastapi-demo -l app=fastapi-demo
 ```
 
-### Check Prometheus Targets
-
-Access Prometheus UI → Status → Targets
-
-### Check ServiceMonitor
-
-```bash
-kubectl get servicemonitor -n fastapi-demo
-```
-
 ## Next Steps
 
 - Add CI/CD pipeline (GitHub Actions, GitLab CI, etc.)
-- Set up alerting rules in Prometheus
 - Create custom Grafana dashboards
 - Add more FastAPI endpoints
 - Implement authentication/authorization
@@ -299,7 +241,6 @@ kubectl get servicemonitor -n fastapi-demo
 ## Resources
 
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
-- [Prometheus Documentation](https://prometheus.io/docs/)
 - [Grafana Loki Documentation](https://grafana.com/docs/loki/latest/)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Kubernetes Documentation](https://kubernetes.io/docs/)

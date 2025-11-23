@@ -2,8 +2,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import time
 import logging
-from prometheus_client import Counter, Histogram, generate_latest, REGISTRY
-from starlette.responses import Response
 import os
 
 # Configure logging
@@ -15,21 +13,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="FastAPI GitOps Demo", version="1.0.0")
 
-# Prometheus metrics
-request_count = Counter(
-    'http_requests_total',
-    'Total HTTP requests',
-    ['method', 'endpoint', 'status']
-)
-
-request_duration = Histogram(
-    'http_request_duration_seconds',
-    'HTTP request duration in seconds',
-    ['method', 'endpoint']
-)
-
 @app.middleware("http")
-async def metrics_middleware(request: Request, call_next):
+async def logging_middleware(request: Request, call_next):
     start_time = time.time()
     method = request.method
     path = request.url.path
@@ -38,10 +23,6 @@ async def metrics_middleware(request: Request, call_next):
     
     duration = time.time() - start_time
     status_code = response.status_code
-    
-    # Record metrics
-    request_count.labels(method=method, endpoint=path, status=status_code).inc()
-    request_duration.labels(method=method, endpoint=path).observe(duration)
     
     logger.info(f"{method} {path} - {status_code} - {duration:.3f}s")
     
@@ -77,11 +58,6 @@ async def get_items():
             {"id": 3, "name": "Item 3", "description": "Third item"}
         ]
     }
-
-@app.get("/metrics")
-async def metrics():
-    """Prometheus metrics endpoint"""
-    return Response(content=generate_latest(REGISTRY), media_type="text/plain")
 
 @app.get("/api/status")
 async def status():

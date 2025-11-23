@@ -5,10 +5,6 @@ metadata:
   namespace: fastapi-demo
   labels:
     app: fastapi-demo
-  annotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "8000"
-    prometheus.io/path: "/metrics"
 spec:
   type: ClusterIP
   ports:
